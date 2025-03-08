@@ -16,11 +16,13 @@ class LinearRegression:
 
     def __loss(self, X, y, add_colum_vector_for_bias):
         """Loss function to minimize."""
-        y_pred = self.pred(X, add_colum_vector_for_bias)
+        y_pred = self.predict(X, add_colum_vector_for_bias)
         loss = 0.5 * ((y - y_pred) ** 2).sum()
         return loss
 
-    def pred(self, X: np.ndarray, add_colum_vector_for_bias: bool = True) -> np.ndarray:
+    def predict(
+        self, X: np.ndarray, add_colum_vector_for_bias: bool = True
+    ) -> np.ndarray:
         """Predction.
 
         Args:
@@ -72,7 +74,7 @@ class LinearRegression:
         self.loss_train_ = []
         for epoch in range(0, num_epochs):
             # Compute the gradient.
-            y_pred_train = self.pred(X_train, add_colum_vector_for_bias=False)
+            y_pred_train = self.predict(X_train, add_colum_vector_for_bias=False)
             gradient = np.dot(X_train.T, y_pred_train - y_train)
 
             # Learning rate decay.
@@ -160,8 +162,8 @@ if __name__ == "__main__":
     print(f"[Estimated] Bias term {regressor.weights_[-1]}")
 
     # Predict
-    y_train_pred = regressor.pred(X_train)
-    y_test_pred = regressor.pred(X_test)
+    y_train_pred = regressor.predict(X_train)
+    y_test_pred = regressor.predict(X_test)
 
     # Compute the MSE
     mse_train = ((y_train - y_train_pred) ** 2).mean()

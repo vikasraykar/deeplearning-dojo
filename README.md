@@ -1,4 +1,4 @@
-# deeplearning-dojo
+# ⛩️ deeplearning-dojo
 
 Coding exercises for the deeplearning repo.
 
@@ -32,3 +32,11 @@ deactivate
 https://vikasraykar.github.io/deeplearning/
 
 ## 📁 Folder structure
+
+The repo is organized as follows.
+
+folder | description
+:--- | :---
+`stubs` | Sample stubs are provided in this folder. YOu task is to write code here.
+`tests` | Tests written with [pytest](https://docs.pytest.org/en/latest/).
+`solutions` | The complete solutions.
