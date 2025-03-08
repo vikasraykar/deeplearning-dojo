@@ -25,7 +25,7 @@ run LinearRegressionNumpy.py
 
 ```
 deactivate
-``
+```
 
 ## 📚 Documentation
 
