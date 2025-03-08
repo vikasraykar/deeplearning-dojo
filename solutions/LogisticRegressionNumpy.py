@@ -175,7 +175,7 @@ def sample_data(N: int = 1000, d: int = 2, train_size: float = 0.7):
 
 if __name__ == "__main__":
 
-    # Sample traing data.
+    # Sample train and test data.
     X_train, y_train, X_test, y_test = sample_data(N=1000, d=3)
     print(X_train.shape)
     print(y_train.shape)
