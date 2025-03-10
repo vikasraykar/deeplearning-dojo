@@ -7,30 +7,28 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
 
-def describe_tensor(X, name):
-    print(f"{name} - shape - {X.shape} - dtype - {X.dtype}")
-    # print(X)
-
-
 class SampleDataset(Dataset):
     """A dataset must implement the following 3 functions."""
 
     def __init__(self, X: np.ndarray, y: np.ndarray):
         """Initialization."""
-        self.N, self.d = X.shape
-        # Convert from numpy array to torch tensors.
-        self.X = torch.from_numpy(X.astype(np.float32))
-        self.y = torch.from_numpy(y.astype(np.float32)).view(self.N, 1)
-        describe_tensor(self.X, "X")
-        describe_tensor(self.y, "y")
+        pass
 
     def __len__(self):
         """Returns the number of samples in our dataset."""
-        return self.N
+        pass
 
     def __getitem__(self, idx):
         """Returns a samples from the dataset at the given index idx."""
-        return self.X[idx, :], self.y[idx, :]
+        pass
+
+
+class LogisticRegression(nn.Module):
+    def __init__(self, num_features: int):
+        pass
+
+    def forward(self, x):
+        pass
 
 
 def sample_data(N: int = 1000, d: int = 2, train_size: float = 0.7):
@@ -71,16 +69,6 @@ def sample_data(N: int = 1000, d: int = 2, train_size: float = 0.7):
     y_train, y_test = y[train_idx], y[test_idx]
 
     return X_train, y_train, X_test, y_test
-
-
-class LogisticRegression(nn.Module):
-    def __init__(self, num_features: int):
-        super(LogisticRegression, self).__init__()
-        self.linear = nn.Linear(in_features=num_features, out_features=1, bias=True)
-
-    def forward(self, x):
-        y_predicted = torch.sigmoid(self.linear(x))
-        return y_predicted
 
 
 # Sample train and test data.
@@ -139,10 +127,10 @@ for name, param in model.named_parameters():
     print(f"Layer: {name} | Size: {param.size()}")
 
 # Loss
-loss_fn = nn.BCELoss()
+loss_fn = ...
 
 # Optimizer
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
+optimizer = ...
 
 
 # Training epoch.
@@ -205,19 +193,3 @@ for epoch in range(epochs):
 
 # Save the model.
 torch.save(model.state_dict(), "model.pth")
-
-# Load the model for testing.
-model = LogisticRegression(num_features=d).to(device)
-model.load_state_dict(torch.load("model.pth", weights_only="True"))
-
-"""
-# Model inference.
-classes = test_data.classes
-model.eval()
-x, y = test_data[10][0], test_data[10][1]
-with torch.no_grad():
-    x = x.to(device)
-    pred = model(x)
-    predicted, actual = classes[pred[0].argmax(0)], classes[y]
-    print(f"Predicted: [{predicted}] Actual [{actual}]")
-"""

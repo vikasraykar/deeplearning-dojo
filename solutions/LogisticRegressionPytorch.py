@@ -1,6 +1,5 @@
 """Logistic Regression using pytorch.
 
-- Review [Datasets & DataLoaders](https://pytorch.org/tutorials/beginner/basics/data_tutorial.html) in pytorch.
 
 """
 
