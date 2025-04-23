@@ -1,8 +1,9 @@
-"""Logistic Regression using pytorch.
+"""Logistic Regression using pytorch."""
 
+# %% [markdown]
+# **Logistic Regression using pytorch.**
 
-"""
-
+# %%
 import numpy as np
 import torch
 from torch import nn
@@ -10,33 +11,14 @@ from torch.utils.data import DataLoader, Dataset
 
 
 def describe_tensor(X, name):
-    print(f"{name} - shape - {X.shape} - dtype - {X.dtype}")
+    print(f"{name} - shape - {X.shape} - dtype - {X.dtype} - device - {X.device}")
     # print(X)
 
 
-class SampleDataset(Dataset):
-    """A dataset must implement the following 3 functions."""
-
-    def __init__(self, X: np.ndarray, y: np.ndarray):
-        """Initialization."""
-        self.N, self.d = X.shape
-        # Convert from numpy array to torch tensors.
-        self.X = torch.from_numpy(X.astype(np.float32))
-        self.y = torch.from_numpy(y.astype(np.float32)).view(self.N, 1)
-        describe_tensor(self.X, "X")
-        describe_tensor(self.y, "y")
-
-    def __len__(self):
-        """Returns the number of samples in our dataset."""
-        return self.N
-
-    def __getitem__(self, idx):
-        """Returns a samples from the dataset at the given index idx."""
-        return self.X[idx, :], self.y[idx, :]
-
-
+# %%
+# Sample train and test data.
 def sample_data(N: int = 1000, d: int = 2, train_size: float = 0.7):
-    """Generate sample train and test data.
+    """Generate sample train and test data for binary classification.
 
     Args:
         N (int, optional): Number of samples. Defaults to 1000.
@@ -75,37 +57,51 @@ def sample_data(N: int = 1000, d: int = 2, train_size: float = 0.7):
     return X_train, y_train, X_test, y_test
 
 
-class LogisticRegression(nn.Module):
-    def __init__(self, num_features: int):
-        super(LogisticRegression, self).__init__()
-        self.linear = nn.Linear(in_features=num_features, out_features=1, bias=True)
-
-    def forward(self, x):
-        y_predicted = torch.sigmoid(self.linear(x))
-        return y_predicted
-
-
-# Sample train and test data.
-N = 1000
+N = 10000
 d = 3
 X_train, y_train, X_test, y_test = sample_data(N, d)
+
 print(X_train.shape)
 print(y_train.shape)
 
+
+# %%
 # Create a Custom Dataset class.
 # A custom Dataset class must implement three functions: __init__, __len__, and __getitem__.
+class SampleDataset(Dataset):
+    """A dataset must implement the following 3 functions."""
+
+    def __init__(self, X: np.ndarray, y: np.ndarray):
+        """Initialization."""
+        self.N, self.d = X.shape
+        # Convert from numpy array to torch tensors.
+        self.X = torch.from_numpy(X.astype(np.float32))
+        self.y = torch.from_numpy(y.astype(np.float32)).view(self.N, 1)
+        describe_tensor(self.X, "X")
+        describe_tensor(self.y, "y")
+
+    def __len__(self):
+        """Returns the number of samples in our dataset."""
+        return self.N
+
+    def __getitem__(self, idx: int):
+        """Returns a sample from the dataset at the given index idx."""
+        return self.X[idx, :], self.y[idx, :]
+
+
 train_dataset = SampleDataset(X_train, y_train)
 test_dataset = SampleDataset(X_test, y_test)
 print(len(train_dataset))
 print(train_dataset[0])
 
+# %%
 # Preparing your data for training with DataLoaders.
 # The Dataset retrieves our dataset’s features and labels one sample at a time.
-# While training a model, we typically want to pass samples in “minibatches”,
+# While training a model, we typically want to pass samples in mini-batches,
 # reshuffle the data at every epoch to reduce model overfitting, and use Python’s
-# multiprocessing to speed up data retrieval.
+# multiprocessing to speed up data retrieval.m
 # DataLoader is an iterable that abstracts this complexity for us in an easy API.
-batch_size = 64
+batch_size = 32
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
@@ -119,8 +115,9 @@ for X, y in train_dataloader:
     describe_tensor(y, name="y")
     break
 
-# Get device/accelerator for training
-# # We want to be able to train our model on an accelerator such as CUDA, MPS, MTIA, or XPU.
+# %%
+# Get device/accelerator for training.
+# We want to be able to train our model on an accelerator such as CUDA, MPS etc.
 # If the current accelerator is available, we will use it. Otherwise, we use the CPU.
 device = (
     torch.accelerator.current_accelerator().type
@@ -129,10 +126,30 @@ device = (
 )
 print(f"Using {device} accelerator.")
 
+
+# %%
 # Define the model class.
 # We define our neural network by subclassing nn.Module, and initialize the neural network
 # layers in __init__. Every nn.Module subclass implements the operations on input data in
 # the forward method.
+class LogisticRegression(nn.Module):
+    """A model class should implement the init and forward functions."""
+
+    def __init__(self, num_features: int):
+        """Logistic Regression.
+
+        Args:
+            num_features (int): Number of features.
+        """
+        super().__init__()
+        self.linear = nn.Linear(in_features=num_features, out_features=1, bias=True)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        y_predicted = self.sigmoid(self.linear(x))
+        return y_predicted
+
+
 model = LogisticRegression(num_features=d)
 model.to(device)
 print(f"Model structure: \n{model}\n")
@@ -140,47 +157,28 @@ print(f"Model structure: \n{model}\n")
 for name, param in model.named_parameters():
     print(f"Layer: {name} | Size: {param.size()}")
 
-# Loss
+# %%
+# Loss function.
+# Binary Cross Entropy Loss.
 loss_fn = nn.BCELoss()
 
-# Optimizer
+# %%
+# Optimizer.
+# SGD with momentum.
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
+# optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, betas=(0.9, 0.99), eps=1e-08)
+
+# %%
+# Learning rate scheduler.
+scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
 
-# Training epoch.
-def train(dataloader, model, loss_fn, optimizer):
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-
-    model.train()
-
-    for batch, (X, y) in enumerate(dataloader):
-        X, y = X.to(device), y.to(device)
-
-        # Prediction error
-        pred = model(X)
-        loss = loss_fn(pred, y)
-
-        # Backpropagation
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if batch % 100 == 0:
-            loss = loss.item()
-            current = (batch + 1) * len(X)
-            print(
-                f"loss: {loss:>5f} batch {batch:>5d}/{num_batches:>5d} {current:>5d}/{size:>5d}"
-            )
-
-
-# Testing.
+# %%
+# Testing
 def test(dataloader, model, loss_fn):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
-
     model.eval()
-
     test_loss = 0
     correct = 0
     with torch.no_grad():
@@ -193,18 +191,46 @@ def test(dataloader, model, loss_fn):
             correct += ((pred >= 0.5) == y).type(torch.float).sum().item()
         test_loss /= num_batches
         correct /= size
-    print(
-        f"Test Error: \n Accuracy: {(100.0*correct):>0.1f} Avg loss: {test_loss:>8f} \n"
-    )
+    print(f"Test Error: Accuracy: {(100.0*correct):>0.1f} Avg loss: {test_loss:>5f} \n")
 
 
-# Start training
-epochs = 100
-for epoch in range(epochs):
-    print(f"Epoch {epoch+1}/{epochs}\n-----------------------")
-    train(train_dataloader, model, loss_fn, optimizer)
+# %%
+# Training.
+num_epochs = 10
+num_batches = len(train_dataloader)
+for epoch in range(0, num_epochs):
     test(test_dataloader, model, loss_fn)
 
+    model.train()
+    for batch, (X, y) in enumerate(train_dataloader):
+        X, y = X.to(device), y.to(device)
+
+        # Forward propagation.
+        y_pred = model(X)
+
+        # Loss function.
+        loss = loss_fn(y_pred, y)
+
+        # Back propagation to compute gradient.
+        loss.backward()
+
+        # Gradient descent.
+        optimizer.step()
+
+        # Prevent gradient accumulation
+        optimizer.zero_grad()
+
+        if batch % 100 == 0:
+            loss = loss.item()
+            print(
+                f"epoch {epoch:>3d}/{num_epochs:>3d} batch {batch:>3d}/{num_batches:>3d} batch loss: {loss:>5f} "
+            )
+
+    # Adjust learning rate
+    print(f"Learning rate: {scheduler.get_last_lr()[0]:.2e}")
+    scheduler.step()
+
+# %%
 # Save the model.
 torch.save(model.state_dict(), "model.pth")
 
@@ -212,14 +238,4 @@ torch.save(model.state_dict(), "model.pth")
 model = LogisticRegression(num_features=d).to(device)
 model.load_state_dict(torch.load("model.pth", weights_only="True"))
 
-"""
-# Model inference.
-classes = test_data.classes
-model.eval()
-x, y = test_data[10][0], test_data[10][1]
-with torch.no_grad():
-    x = x.to(device)
-    pred = model(x)
-    predicted, actual = classes[pred[0].argmax(0)], classes[y]
-    print(f"Predicted: [{predicted}] Actual [{actual}]")
-"""
+# %%

@@ -1,4 +1,5 @@
 ipython
+jupyter
 numpy
 pandas
 torch
